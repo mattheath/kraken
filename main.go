@@ -8,12 +8,6 @@ import (
 	log "github.com/cihub/seelog"
 )
 
-type Fetcher interface {
-	// Fetch returns the body of URL and
-	// a slice of URLs found on that page.
-	Fetch(url string) (body string, urls []string, err error)
-}
-
 func main() {
 	// Flush logs before exit
 	defer log.Flush()

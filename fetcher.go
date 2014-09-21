@@ -15,6 +15,12 @@ var (
 	InvalidNodeAttributeMissing = errors.New("Node does not contain the specified attribute")
 )
 
+type Fetcher interface {
+	// Fetch returns the body of URL and
+	// a slice of URLs found on that page.
+	Fetch(url string) (body string, urls []string, err error)
+}
+
 type HttpFetcher struct{}
 
 // fetch retrieves the page at the specified URL and extracts URLs
