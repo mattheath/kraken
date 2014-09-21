@@ -8,6 +8,10 @@ import (
 )
 
 func main() {
+
+	// Flush logs before exit
+	defer log.Flush()
+
 	// Crawl the specified site
 	Crawl("http://golang.org/")
 }
