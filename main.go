@@ -12,6 +12,7 @@ var (
 	flagSet = flag.NewFlagSet("kraken", flag.ExitOnError)
 
 	target = flagSet.String("target", "", "target URL to crawl")
+	depth  = flagSet.Int("depth", 2, "depth of pages to crawl")
 )
 
 func main() {
@@ -33,7 +34,7 @@ func main() {
 
 	// Crawl the specified site
 	done := make(chan bool, 1)
-	Crawl(*target, 2, fetcher, done)
+	Crawl(*target, *depth, fetcher, done)
 	<-done
 
 	log.Debugf("We're done!")
