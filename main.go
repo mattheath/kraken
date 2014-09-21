@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+
 	html "code.google.com/p/go.net/html"
 	atom "code.google.com/p/go.net/html/atom"
 	"github.com/PuerkitoBio/goquery"
@@ -61,21 +63,8 @@ func extractLinks(doc *goquery.Document) ([]string, error) {
 
 	// Range over links, and add them to our list if valid
 	for i, n := range sel.Nodes {
-		if n.Type != html.ElementNode || n.DataAtom != atom.A {
-			log.Debugf("Node is not an anchor: %v", n.Type)
-			continue
-		}
-
-		var href string
-
-		for _, a := range n.Attr {
-			if a.Key != "href" {
-				continue
-			}
-			href = a.Val
-		}
-
-		if href == "" {
+		href, err := validateLink(n)
+		if err != nil || href == "" {
 			continue
 		}
 
@@ -84,4 +73,22 @@ func extractLinks(doc *goquery.Document) ([]string, error) {
 	}
 
 	return urls, nil
+}
+
+func validateLink(n *html.Node) (string, error) {
+	var href string
+
+	// Confirm this node is an anchor element
+	if n == nil || n.Type != html.ElementNode || n.DataAtom != atom.A {
+		return href, errors.New("Node is not an anchor")
+	}
+
+	// Return the value of the href attr if it exists
+	for _, a := range n.Attr {
+		if a.Key == "href" && a.Val != "" {
+			return a.Val, nil
+		}
+	}
+
+	return "", errors.New("Anchor does not contain a href attribute")
 }
