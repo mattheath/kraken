@@ -8,18 +8,21 @@ import (
 	log "github.com/cihub/seelog"
 )
 
+var (
+	flagSet = flag.NewFlagSet("kraken", flag.ExitOnError)
+
+	target = flagSet.String("target", "", "target URL to crawl")
+)
+
 func main() {
+	// Process flags
+	flagSet.Parse(os.Args[1:])
+
 	// Flush logs before exit
 	defer log.Flush()
 
-	var target string
-
-	// Process flags
-	flag.StringVar(&target, "target", "", "Target URL to crawl")
-	flag.Parse()
-
-	// Good to go?
-	if target == "" {
+	// Do we have a target?
+	if *target == "" {
 		fmt.Println("Please specify a target domain, eg. kraken -target=\"http://example.com\"")
 		os.Exit(1)
 	}
@@ -29,7 +32,7 @@ func main() {
 	fetcher := &HttpFetcher{}
 
 	// Crawl the specified site
-	Crawl(target, 4, fetcher)
+	Crawl(*target, 4, fetcher)
 }
 
 // Crawl uses fetcher to recursively crawl
