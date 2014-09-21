@@ -31,18 +31,35 @@ func Crawl(url string) {
 // fetch retrieves the page at the specified URL and extracts URLs
 func fetch(url string) (string, []string, error) {
 
-	urls := make([]string, 0)
-
 	doc, err := goquery.NewDocument(url)
+	if err != nil {
+		return "", nil, err
+	}
+
+	urls, err := extractLinks(doc)
 	if err != nil {
 		return "", urls, err
 	}
 
+	log.Debugf("URLs: %+v", urls)
+
+	return "", urls, nil
+}
+
+// extractLinks from a document
+func extractLinks(doc *goquery.Document) ([]string, error) {
+
+	// Blank slice to hold our links on this page
+	urls := make([]string, 0)
+
+	// Extract all 'a' elements from the document
 	sel := doc.Find("a")
 	if sel == nil {
-		return "", urls, nil
+		// Assume zero links on failure
+		return nil, nil
 	}
 
+	// Range over links, and add them to our list if valid
 	for i, n := range sel.Nodes {
 		if n.Type != html.ElementNode || n.DataAtom != atom.A {
 			log.Debugf("Node is not an anchor: %v", n.Type)
@@ -62,11 +79,9 @@ func fetch(url string) (string, []string, error) {
 			continue
 		}
 
-		log.Infof("Node %v: %s", i, href)
+		log.Debugf("Node %v: %s", i, href)
 		urls = append(urls, href)
 	}
 
-	log.Debugf("URLs: %+v", urls)
-
-	return "body", urls, nil
+	return urls, nil
 }
