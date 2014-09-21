@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"net/url"
 
 	html "code.google.com/p/go.net/html"
 	atom "code.google.com/p/go.net/html/atom"
@@ -63,13 +64,18 @@ func extractLinks(doc *goquery.Document) ([]string, error) {
 
 	// Range over links, and add them to the list if valid
 	for i, n := range sel.Nodes {
+
+		// Validate the node is a link, and extract the target URL
 		href, err := validateLink(n)
 		if err != nil || href == "" {
 			continue
 		}
 
-		log.Debugf("Node %v: %s", i, href)
-		urls = append(urls, href)
+		// Normalise the URL and add if valid
+		if uri := normaliseUrl(doc.Url, href); uri != "" {
+			log.Debugf("Node %v: %s", i, href)
+			urls = append(urls, uri)
+		}
 	}
 
 	return urls, nil
@@ -92,4 +98,21 @@ func validateLink(n *html.Node) (string, error) {
 	}
 
 	return "", errors.New("Node does not contain a href attribute")
+}
+
+// normaliseUrl converts relative URLs to absolute URLs
+func normaliseUrl(parent *url.URL, urlString string) string {
+
+	// Parse the string into a url.URL
+	uri, err := url.Parse(urlString)
+	if err != nil {
+		log.Debugf("Failed to parse URL: %s", urlString)
+		return ""
+	}
+
+	// Resolve references to get an absolute URL
+	abs := parent.ResolveReference(uri).String()
+	log.Debugf("Resolved: %s", abs)
+
+	return abs
 }
