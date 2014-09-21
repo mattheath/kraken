@@ -10,6 +10,11 @@ import (
 	log "github.com/cihub/seelog"
 )
 
+var (
+	InvalidNode                 = errors.New("Node is not an anchor")
+	InvalidNodeAttributeMissing = errors.New("Node does not contain the specified attribute")
+)
+
 type HttpFetcher struct{}
 
 // fetch retrieves the page at the specified URL and extracts URLs
@@ -47,7 +52,7 @@ func (h *HttpFetcher) extractLinks(doc *goquery.Document) ([]string, error) {
 	for i, n := range sel.Nodes {
 
 		// Validate the node is a link, and extract the target URL
-		href, err := h.validateLink(n)
+		href, err := h.extractValidHref(n)
 		if err != nil || href == "" {
 			continue
 		}
@@ -63,12 +68,12 @@ func (h *HttpFetcher) extractLinks(doc *goquery.Document) ([]string, error) {
 }
 
 // validateLink is an anchor with a href, and extract normalised url
-func (h *HttpFetcher) validateLink(n *html.Node) (string, error) {
+func (h *HttpFetcher) extractValidHref(n *html.Node) (string, error) {
 	var href string
 
 	// Confirm this node is an anchor element
 	if n == nil || n.Type != html.ElementNode || n.DataAtom != atom.A {
-		return href, errors.New("Node is not an anchor")
+		return href, InvalidNode
 	}
 
 	// Return the value of the href attr if it exists
@@ -78,7 +83,7 @@ func (h *HttpFetcher) validateLink(n *html.Node) (string, error) {
 		}
 	}
 
-	return "", errors.New("Node does not contain a href attribute")
+	return "", InvalidNodeAttributeMissing
 }
 
 // normaliseUrl converts relative URLs to absolute URLs
