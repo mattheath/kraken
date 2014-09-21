@@ -26,7 +26,7 @@ func main() {
 		fmt.Println("Please specify a target domain, eg. kraken -target=\"http://example.com\"")
 		os.Exit(1)
 	}
-	log.Infof("Unleashing the Kraken at %s", target)
+	log.Infof("Unleashing the Kraken at %s", *target)
 
 	// Use a HTTP based fetcher
 	fetcher := &HttpFetcher{}
