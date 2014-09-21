@@ -35,10 +35,14 @@ func fetch(url string) (string, []string, error) {
 
 	doc, err := goquery.NewDocument(url)
 	if err != nil {
-		return "", nil, err
+		return "", urls, err
 	}
 
 	sel := doc.Find("a")
+	if sel == nil {
+		return "", urls, nil
+	}
+
 	for i, n := range sel.Nodes {
 		if n.Type != html.ElementNode || n.DataAtom != atom.A {
 			log.Debugf("Node is not an anchor: %v", n.Type)
