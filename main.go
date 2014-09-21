@@ -1,6 +1,10 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"os"
+
 	log "github.com/cihub/seelog"
 )
 
@@ -11,14 +15,27 @@ type Fetcher interface {
 }
 
 func main() {
-
 	// Flush logs before exit
 	defer log.Flush()
 
+	var target string
+
+	// Process flags
+	flag.StringVar(&target, "target", "", "Target URL to crawl")
+	flag.Parse()
+
+	// Good to go?
+	if target == "" {
+		fmt.Println("Please specify a target domain, eg. kraken -target=\"http://example.com\"")
+		os.Exit(1)
+	}
+	log.Infof("Unleashing the Kraken at %s", target)
+
+	// Use a HTTP based fetcher
 	fetcher := &HttpFetcher{}
 
 	// Crawl the specified site
-	Crawl("http://golang.org/", 4, fetcher)
+	Crawl(target, 4, fetcher)
 }
 
 // Crawl uses fetcher to recursively crawl
