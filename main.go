@@ -32,18 +32,49 @@ func main() {
 	fetcher := &HttpFetcher{}
 
 	// Crawl the specified site
-	Crawl(*target, 4, fetcher)
+	done := make(chan bool, 1)
+	Crawl(*target, 2, fetcher, done)
+	<-done
+
+	log.Debugf("We're done!")
 }
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string, depth int, fetcher Fetcher) {
+func Crawl(url string, depth int, fetcher Fetcher, pageDone chan bool) {
+
+	if depth <= 0 {
+		log.Debugf("Skipping %s as at 0 depth", url)
+		pageDone <- true
+		return
+	}
 
 	_, urls, err := fetcher.Fetch(url)
 	if err != nil {
 		log.Errorf("Error:", err)
+		pageDone <- true
 		return
 	}
 
-	log.Infof("URLs found: %+v", urls)
+	log.Infof("%v URLs found at %s", len(urls), url)
+
+	// Track children
+	done := make(chan bool)
+	count := 0
+
+	for _, u := range urls {
+		log.Debugf("Firing crawler at %s, depth %v", u, depth-1)
+		count++
+		go Crawl(u, depth-1, fetcher, done)
+	}
+
+	for ; count > 0; count-- {
+		log.Debugf("waiting on done chan")
+		<-done
+	}
+
+	log.Debugf("Page complete: %s", url)
+
+	// Mark this page as complete
+	pageDone <- true
 }
