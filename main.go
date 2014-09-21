@@ -51,7 +51,7 @@ func fetch(url string) (string, []string, error) {
 // extractLinks from a document
 func extractLinks(doc *goquery.Document) ([]string, error) {
 
-	// Blank slice to hold our links on this page
+	// Blank slice to hold the links on this page
 	urls := make([]string, 0)
 
 	// Extract all 'a' elements from the document
@@ -61,7 +61,7 @@ func extractLinks(doc *goquery.Document) ([]string, error) {
 		return nil, nil
 	}
 
-	// Range over links, and add them to our list if valid
+	// Range over links, and add them to the list if valid
 	for i, n := range sel.Nodes {
 		href, err := validateLink(n)
 		if err != nil || href == "" {
@@ -75,6 +75,7 @@ func extractLinks(doc *goquery.Document) ([]string, error) {
 	return urls, nil
 }
 
+// validateLink is an anchor with a href, and extract normalised url
 func validateLink(n *html.Node) (string, error) {
 	var href string
 
@@ -90,5 +91,5 @@ func validateLink(n *html.Node) (string, error) {
 		}
 	}
 
-	return "", errors.New("Anchor does not contain a href attribute")
+	return "", errors.New("Node does not contain a href attribute")
 }
