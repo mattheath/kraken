@@ -39,4 +39,5 @@ func main() {
 	c.Work(*target, *depth, fetcher)
 
 	log.Debugf("We're done!")
+	log.Infof("%v pages found, %v requests attempted", len(c.Pages), c.TotalRequests())
 }

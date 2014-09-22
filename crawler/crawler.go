@@ -25,6 +25,9 @@ type Crawler struct {
 
 	// requestsInFlight tracks how many of requests are outstanding
 	requestsInFlight int
+
+	// totalRequests tracks the number of requests we have made
+	totalRequests int
 }
 
 type Result struct {
@@ -121,4 +124,8 @@ func (c *Crawler) crawl(url string, depth int, fetcher Fetcher) {
 
 	// 	// Mark this page as complete
 	c.completed <- res
+}
+
+func (c *Crawler) TotalRequests() int {
+	return c.totalRequests
 }
