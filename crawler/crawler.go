@@ -28,6 +28,9 @@ type Crawler struct {
 
 	// totalRequests tracks the number of requests we have made
 	totalRequests int
+
+	// target stores our original target for comparisons
+	target *url.URL
 }
 
 type Result struct {
@@ -42,10 +45,10 @@ type Result struct {
 // our internal maps, so we don't require coordination or locking
 // (maps are not threadsafe)
 func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
+	var err error
 
 	// Convert our target to a URL
-	uri, err := url.Parse(target)
-	if err != nil {
+	if c.target, err = url.Parse(target); err != nil {
 		log.Errorf("Could not parse target '%s'", target)
 		return
 	}
@@ -60,7 +63,7 @@ func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
 	c.Links = make(map[string]*Link)
 
 	// Get our first page & track this
-	go c.crawl(uri, depth, fetcher)
+	go c.crawl(c.target, depth, fetcher)
 	c.requestsInFlight++
 
 	// Event loop
@@ -73,12 +76,20 @@ func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
 			log.Debugf("Page errored for %s: %v", r.Url, r.Error)
 		case r := <-c.completed:
 			log.Debugf("Page complete for %s", r.Url)
-
 			if r.Page == nil {
 				break
 			}
 
+			// Process each link
 			for _, l := range r.Page.Links {
+
+				// Skip page if not on our target domain
+				if l.Target.Host != c.target.Host {
+					// log.Debugf("Skipping %s as not on target domain", source.String())
+					continue
+				}
+
+				log.Debugf("Triggering crawl of %s from %s", l.Target.String(), r.Url.String())
 				go c.crawl(l.Target, r.Depth-1, fetcher)
 				c.requestsInFlight++
 				c.totalRequests++
