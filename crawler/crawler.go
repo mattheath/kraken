@@ -48,6 +48,10 @@ func (c *Crawler) AllPages() []*domain.Page {
 	return ret
 }
 
+func (c *Crawler) Target() *url.URL {
+	return c.target
+}
+
 func (c *Crawler) TotalRequests() int {
 	return c.totalRequests
 }
