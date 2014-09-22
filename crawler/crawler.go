@@ -134,7 +134,7 @@ func (c *Crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
 	}
 
 	// Crawl the page, using our fetcher
-	urls, _, err := fetcher.Fetch(source.String())
+	urls, assets, err := fetcher.Fetch(source.String())
 	if err != nil {
 		res.Error = err
 		c.errored <- res
@@ -153,8 +153,9 @@ func (c *Crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
 
 	// Store this page and links into the result
 	res.Page = &Page{
-		Url:   source,
-		Links: links,
+		Url:    source,
+		Links:  links,
+		Assets: assets,
 	}
 
 	// 	// Mark this page as complete
