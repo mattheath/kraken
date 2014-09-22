@@ -57,7 +57,7 @@ func main() {
 	log.Infof("Unleashing the Kraken at %s", *target)
 
 	// Crawl the specified site
-	c := &crawler.Crawler{}
+	c := crawler.NewCrawler()
 	c.Work(targetUrl, *depth, fetcher)
 
 	// Success

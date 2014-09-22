@@ -35,6 +35,24 @@ type Crawler struct {
 	target *url.URL
 }
 
+// NewCrawler initialises and returns a new Crawler
+func NewCrawler() *Crawler {
+
+	// Initialise new Crawler
+	c := &Crawler{
+		// Initialise channels to track requests
+		completed: make(chan *Result),
+		skipped:   make(chan *Result),
+		errored:   make(chan *Result),
+
+		// Initialise results containers
+		Pages: make(map[string]*domain.Page),
+		Links: make(map[string]*domain.Link),
+	}
+
+	return c
+}
+
 func (c *Crawler) AllPages() []*domain.Page {
 	ret := make([]*domain.Page, len(c.Pages))
 
@@ -72,15 +90,6 @@ func (c *Crawler) Work(target *url.URL, depth int, fetcher Fetcher) {
 
 	// Store our target to a URL
 	c.target = target
-
-	// Initialise channels to track requests
-	c.completed = make(chan *Result)
-	c.skipped = make(chan *Result)
-	c.errored = make(chan *Result)
-
-	// Initialise results containers
-	c.Pages = make(map[string]*domain.Page)
-	c.Links = make(map[string]*domain.Link)
 
 	// Get our first page & track this
 	go c.crawl(c.target, depth, fetcher)
