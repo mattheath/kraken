@@ -5,7 +5,7 @@ import (
 )
 
 type Fetcher interface {
-	// Fetch returns the body of URL and
-	// a slice of URLs found on that page.
-	Fetch(url string) (urls []*url.URL, assets []*url.URL, err error)
+	// Fetch returns a slice of URLs found on the target page
+	// along with a slice of assets.
+	Fetch(target *url.URL) (urls []*url.URL, assets []*url.URL, err error)
 }

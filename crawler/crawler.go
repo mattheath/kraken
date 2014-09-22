@@ -154,7 +154,7 @@ func (c *Crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
 	}
 
 	// Crawl the page, using our fetcher
-	urls, assets, err := fetcher.Fetch(source.String())
+	urls, assets, err := fetcher.Fetch(source)
 	if err != nil {
 		res.Error = err
 		c.errored <- res

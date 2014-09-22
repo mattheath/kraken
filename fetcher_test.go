@@ -108,7 +108,7 @@ func TestNormaliseUrl(t *testing.T) {
 
 	for tc, expected := range testCases {
 		result := f.normaliseUrl(parent, tc)
-		assert.Equal(t, result, expected)
+		assert.Equal(t, result.String(), expected)
 	}
 
 }

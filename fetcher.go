@@ -17,17 +17,17 @@ var (
 )
 
 type Fetcher interface {
-	// Fetch returns the body of URL and
-	// a slice of URLs found on that page.
-	Fetch(url string) (urls []*url.URL, assets []*url.URL, err error)
+	// Fetch returns a slice of URLs found on the target page
+	// along with a slice of assets.
+	Fetch(target *url.URL) (urls []*url.URL, assets []*url.URL, err error)
 }
 
 type HttpFetcher struct{}
 
 // Fetch retrieves the page at the specified URL and extracts URLs
-func (h *HttpFetcher) Fetch(url string) ([]*url.URL, []*url.URL, error) {
+func (h *HttpFetcher) Fetch(target *url.URL) ([]*url.URL, []*url.URL, error) {
 
-	doc, err := goquery.NewDocument(url)
+	doc, err := goquery.NewDocument(target.String())
 	if err != nil {
 		return nil, nil, err
 	}
