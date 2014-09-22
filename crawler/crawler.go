@@ -35,6 +35,23 @@ type Crawler struct {
 	target *url.URL
 }
 
+func (c *Crawler) AllPages() []*domain.Page {
+	ret := make([]*domain.Page, len(c.Pages))
+
+	// Iterate over pages and assign to slice
+	i := 0
+	for _, p := range c.Pages {
+		ret[i] = p
+		i++
+	}
+
+	return ret
+}
+
+func (c *Crawler) TotalRequests() int {
+	return c.totalRequests
+}
+
 // Result represents the result of a crawl request
 type Result struct {
 	Url   *url.URL
@@ -159,8 +176,4 @@ func (c *Crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
 
 	// 	// Mark this page as complete
 	c.completed <- res
-}
-
-func (c *Crawler) TotalRequests() int {
-	return c.totalRequests
 }
