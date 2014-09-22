@@ -61,7 +61,7 @@ func (h *HttpFetcher) extractLinks(doc *goquery.Document) ([]*url.URL, error) {
 	}
 
 	// Range over links, and add them to the list if valid
-	for i, n := range sel.Nodes {
+	for _, n := range sel.Nodes {
 
 		// Validate the node is a link, and extract the target URL
 		href, err := h.extractValidHref(n)
