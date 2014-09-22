@@ -2,6 +2,8 @@
 
 Kraken is a parallelised web crawler written in Go
 
+![](docs/kraken.jpg)
+
 ## Usage
 
 	* go get github.com/mattheath/kraken
