@@ -8,13 +8,14 @@ import (
 	"github.com/mattheath/kraken/domain"
 )
 
+// Crawler interface provides methods to extract data from a crawler
 type Crawler interface {
 	AllPages() []*domain.Page
 	Target() *url.URL
 	TotalRequests() int
 }
 
-// crawler coordinated crawling a site, and stores completed results
+// crawler coordinates crawling a site, and stores completed results
 type crawler struct {
 	// Store our results
 	Pages map[string]*domain.Page
@@ -59,6 +60,7 @@ func NewCrawler() *crawler {
 	return c
 }
 
+// AllPages retrieves all of the pages the crawler has found
 func (c *crawler) AllPages() []*domain.Page {
 	ret := make([]*domain.Page, len(c.Pages))
 
@@ -72,10 +74,12 @@ func (c *crawler) AllPages() []*domain.Page {
 	return ret
 }
 
+// Target of the crawler
 func (c *crawler) Target() *url.URL {
 	return c.target
 }
 
+// TotalRequests the crawler has sent at this point
 func (c *crawler) TotalRequests() int {
 	return c.totalRequests
 }
