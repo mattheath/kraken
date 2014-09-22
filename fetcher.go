@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/url"
+	"strings"
 
 	html "code.google.com/p/go.net/html"
 	atom "code.google.com/p/go.net/html/atom"
@@ -178,6 +179,12 @@ func (h *HttpFetcher) extractValidHref(n *html.Node) (string, error) {
 
 // normaliseUrl converts relative URLs to absolute URLs
 func (h *HttpFetcher) normaliseUrl(parent *url.URL, urlString string) *url.URL {
+
+	// Strip off fragment
+	i := strings.LastIndex(urlString, "#")
+	if i >= 0 {
+		urlString = urlString[:i]
+	}
 
 	// Parse the string into a url.URL
 	uri, err := url.Parse(urlString)
