@@ -8,8 +8,14 @@ import (
 	"github.com/mattheath/kraken/domain"
 )
 
-// Crawler coordinated crawling a site, and stores completed results
-type Crawler struct {
+type Crawler interface {
+	AllPages() []*domain.Page
+	Target() *url.URL
+	TotalRequests() int
+}
+
+// crawler coordinated crawling a site, and stores completed results
+type crawler struct {
 	// Store our results
 	Pages map[string]*domain.Page
 	Links map[string]*domain.Link
@@ -36,10 +42,10 @@ type Crawler struct {
 }
 
 // NewCrawler initialises and returns a new Crawler
-func NewCrawler() *Crawler {
+func NewCrawler() *crawler {
 
 	// Initialise new Crawler
-	c := &Crawler{
+	c := &crawler{
 		// Initialise channels to track requests
 		completed: make(chan *Result),
 		skipped:   make(chan *Result),
@@ -53,7 +59,7 @@ func NewCrawler() *Crawler {
 	return c
 }
 
-func (c *Crawler) AllPages() []*domain.Page {
+func (c *crawler) AllPages() []*domain.Page {
 	ret := make([]*domain.Page, len(c.Pages))
 
 	// Iterate over pages and assign to slice
@@ -66,11 +72,11 @@ func (c *Crawler) AllPages() []*domain.Page {
 	return ret
 }
 
-func (c *Crawler) Target() *url.URL {
+func (c *crawler) Target() *url.URL {
 	return c.target
 }
 
-func (c *Crawler) TotalRequests() int {
+func (c *crawler) TotalRequests() int {
 	return c.totalRequests
 }
 
@@ -86,7 +92,7 @@ type Result struct {
 // This is single threaded and is the only thread that writes into
 // our internal maps, so we don't require coordination or locking
 // (maps are not threadsafe)
-func (c *Crawler) Work(target *url.URL, depth int, fetcher Fetcher) {
+func (c *crawler) Work(target *url.URL, depth int, fetcher Fetcher) {
 
 	// Store our target to a URL
 	c.target = target
@@ -147,7 +153,7 @@ func (c *Crawler) Work(target *url.URL, depth int, fetcher Fetcher) {
 
 // crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func (c *Crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
+func (c *crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
 
 	// The result of our crawl
 	res := &Result{

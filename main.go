@@ -88,7 +88,7 @@ func setLogger(verbose bool) {
 	log.UseLogger(logger)
 }
 
-func writeSitemaps(outdir string, c *crawler.Crawler) error {
+func writeSitemaps(outdir string, c crawler.Crawler) error {
 
 	// Build sitemap and write to output file
 	xmlout := fmt.Sprintf("%s/%s-sitemap.xml", outdir, c.Target().Host)
