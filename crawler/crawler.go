@@ -68,6 +68,7 @@ func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
 		select {
 		case r := <-c.skipped:
 			log.Debugf("Page skipped for %s", r.Url)
+			c.totalRequests--
 		case r := <-c.errored:
 			log.Debugf("Page errored for %s: %v", r.Url, r.Error)
 		case r := <-c.completed:
