@@ -33,12 +33,18 @@ func (h *HttpFetcher) Fetch(url string) ([]*url.URL, []*url.URL, error) {
 
 	urls, err := h.extractLinks(doc)
 	if err != nil {
-		return nil, urls, err
+		return nil, nil, err
+	}
+
+	assets, err := h.extractAssets(doc)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	log.Debugf("URLs: %+v", urls)
+	log.Debugf("Assets: %+v", assets)
 
-	return nil, urls, nil
+	return urls, assets, nil
 }
 
 // extractLinks from a document
@@ -65,12 +71,90 @@ func (h *HttpFetcher) extractLinks(doc *goquery.Document) ([]*url.URL, error) {
 
 		// Normalise the URL and add if valid
 		if uri := h.normaliseUrl(doc.Url, href); uri != nil {
-			log.Debugf("Node %v: %s", i, href)
 			urls = append(urls, uri)
 		}
 	}
 
 	return urls, nil
+}
+
+// extractAssets from a document
+// @todo break this up and add tests
+func (h *HttpFetcher) extractAssets(doc *goquery.Document) ([]*url.URL, error) {
+
+	var sel *goquery.Selection
+	assets := make([]*url.URL, 0)
+
+	// First grab all the images
+	sel = doc.Find("img")
+	for _, n := range sel.Nodes {
+		if n == nil {
+			continue
+		}
+		for _, a := range n.Attr {
+			if a.Key == "src" && a.Val != "" {
+				if uri := h.normaliseUrl(doc.Url, a.Val); uri != nil {
+					assets = append(assets, uri)
+					break
+				}
+
+			}
+		}
+	}
+
+	// Next scripts
+	sel = doc.Find("script")
+	for _, n := range sel.Nodes {
+		if n == nil {
+			continue
+		}
+		for _, a := range n.Attr {
+			if a.Key == "src" && a.Val != "" {
+				if uri := h.normaliseUrl(doc.Url, a.Val); uri != nil {
+					assets = append(assets, uri)
+					break
+				}
+
+			}
+		}
+	}
+
+	// Links, eg styles, shortcut icons etc
+	sel = doc.Find("link")
+	for _, n := range sel.Nodes {
+		if n == nil {
+			continue
+		}
+
+		// Pull out various fields
+		var rel, linktype string
+		var uri *url.URL
+		for _, a := range n.Attr {
+			switch a.Key {
+			case "rel":
+				rel = a.Val
+			case "type":
+				linktype = a.Val
+			case "href":
+				uri = h.normaliseUrl(doc.Url, a.Val)
+			}
+		}
+
+		// Continue if there is no link target
+		if uri == nil {
+			continue
+		}
+
+		// Otherwise select specific combinations
+		switch {
+		case rel == "stylesheet" && linktype == "text/css":
+			assets = append(assets, uri)
+		case rel == "shortcut icon":
+			assets = append(assets, uri)
+		}
+	}
+
+	return assets, nil
 }
 
 // validateLink is an anchor with a href, and extract normalised url
@@ -104,7 +188,6 @@ func (h *HttpFetcher) normaliseUrl(parent *url.URL, urlString string) *url.URL {
 
 	// Resolve references to get an absolute URL
 	abs := parent.ResolveReference(uri)
-	log.Debugf("Resolved: %s", abs)
 
 	return abs
 }
