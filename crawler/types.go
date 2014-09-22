@@ -12,7 +12,7 @@ type Fetcher interface {
 
 type Page struct {
 	Url    *url.URL
-	Links  []*url.URL
+	Links  []*Link
 	Assets []string
 }
 
