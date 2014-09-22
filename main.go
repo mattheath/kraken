@@ -13,8 +13,9 @@ import (
 var (
 	flagSet = flag.NewFlagSet("kraken", flag.ExitOnError)
 
-	target = flagSet.String("target", "", "target URL to crawl")
-	depth  = flagSet.Int("depth", 2, "depth of pages to crawl")
+	target         = flagSet.String("target", "", "target URL to crawl")
+	depth          = flagSet.Int("depth", 2, "depth of pages to crawl")
+	verboseLogging = flagSet.Bool("v", false, "enable verbose logging")
 )
 
 func main() {
@@ -22,6 +23,7 @@ func main() {
 	flagSet.Parse(os.Args[1:])
 
 	// Flush logs before exit
+	setLogger(*verboseLogging)
 	defer log.Flush()
 
 	// Do we have a target?
@@ -40,4 +42,26 @@ func main() {
 
 	log.Debugf("We're done!")
 	log.Infof("%v pages found, %v requests attempted", len(c.Pages), c.TotalRequests())
+}
+
+func setLogger(verbose bool) {
+
+	var logLevel string
+	if verbose {
+		logLevel = "debug"
+	} else {
+		logLevel = "info"
+	}
+
+	logConfig := `
+<seelog>
+    <outputs>
+        <filter levels="%s">
+            <console />
+        </filter>
+    </outputs>
+</seelog>`
+
+	logger, _ := log.LoggerFromConfigAsBytes([]byte(fmt.Sprintf(logConfig, logLevel)))
+	log.UseLogger(logger)
 }
