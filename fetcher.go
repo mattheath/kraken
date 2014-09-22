@@ -18,34 +18,34 @@ var (
 type Fetcher interface {
 	// Fetch returns the body of URL and
 	// a slice of URLs found on that page.
-	Fetch(url string) (body string, urls []string, err error)
+	Fetch(url string) (urls []*url.URL, assets []*url.URL, err error)
 }
 
 type HttpFetcher struct{}
 
 // Fetch retrieves the page at the specified URL and extracts URLs
-func (h *HttpFetcher) Fetch(url string) (string, []string, error) {
+func (h *HttpFetcher) Fetch(url string) ([]*url.URL, []*url.URL, error) {
 
 	doc, err := goquery.NewDocument(url)
 	if err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 
 	urls, err := h.extractLinks(doc)
 	if err != nil {
-		return "", urls, err
+		return nil, urls, err
 	}
 
 	log.Debugf("URLs: %+v", urls)
 
-	return "", urls, nil
+	return nil, urls, nil
 }
 
 // extractLinks from a document
-func (h *HttpFetcher) extractLinks(doc *goquery.Document) ([]string, error) {
+func (h *HttpFetcher) extractLinks(doc *goquery.Document) ([]*url.URL, error) {
 
 	// Blank slice to hold the links on this page
-	urls := make([]string, 0)
+	urls := make([]*url.URL, 0)
 
 	// Extract all 'a' elements from the document
 	sel := doc.Find("a")
@@ -64,7 +64,7 @@ func (h *HttpFetcher) extractLinks(doc *goquery.Document) ([]string, error) {
 		}
 
 		// Normalise the URL and add if valid
-		if uri := h.normaliseUrl(doc.Url, href); uri != "" {
+		if uri := h.normaliseUrl(doc.Url, href); uri != nil {
 			log.Debugf("Node %v: %s", i, href)
 			urls = append(urls, uri)
 		}
@@ -93,17 +93,17 @@ func (h *HttpFetcher) extractValidHref(n *html.Node) (string, error) {
 }
 
 // normaliseUrl converts relative URLs to absolute URLs
-func (h *HttpFetcher) normaliseUrl(parent *url.URL, urlString string) string {
+func (h *HttpFetcher) normaliseUrl(parent *url.URL, urlString string) *url.URL {
 
 	// Parse the string into a url.URL
 	uri, err := url.Parse(urlString)
 	if err != nil {
 		log.Debugf("Failed to parse URL: %s", urlString)
-		return ""
+		return nil
 	}
 
 	// Resolve references to get an absolute URL
-	abs := parent.ResolveReference(uri).String()
+	abs := parent.ResolveReference(uri)
 	log.Debugf("Resolved: %s", abs)
 
 	return abs

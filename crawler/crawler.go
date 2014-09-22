@@ -133,7 +133,7 @@ func (c *Crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
 	}
 
 	// Crawl the page, using our fetcher
-	_, urls, err := fetcher.Fetch(source.String())
+	urls, _, err := fetcher.Fetch(source.String())
 	if err != nil {
 		res.Error = err
 		c.errored <- res
@@ -144,12 +144,10 @@ func (c *Crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
 
 	links := make([]*Link, 0)
 	for _, u := range urls {
-		if nu, err := url.Parse(u); err == nil {
-			links = append(links, &Link{
-				Source: source,
-				Target: nu,
-			})
-		}
+		links = append(links, &Link{
+			Source: source,
+			Target: u,
+		})
 	}
 
 	// Store this page and links into the result
