@@ -20,8 +20,15 @@ Kraken takes a number of command line flags:
 	* -v                           - Enable verbose logging
 	* -o                           - Specify output directory
 
-## Todo
+## Implementation
+
+On start, Kraken fires up a `crawler` which acts as a coordinator, spawning worker goroutines for each link on each page it encounters, which return their results back to the crawler via channels. This allows Kraken to crawl a large number of pages in parallel, though there is currently no upper bound on the number of these.
+
+The crawlers retrieve links and a list of static assets used on each page. This is currently not configurable, but will be implemented in the future. Link mappings _are_ stored, so a list of edges and nodes is available.
+
+## Roadmap
 
  - [ ] Limit the number of concurrent goroutines, currently this runs as fast as possible
  - [ ] Retry failed page loads with exponential backoff
+ - [ ] Allow customisation of resources extracted from pages
  - [ ] Listen on HTTP port and serve back site description
