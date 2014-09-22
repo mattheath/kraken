@@ -14,7 +14,7 @@ var (
 	flagSet = flag.NewFlagSet("kraken", flag.ExitOnError)
 
 	target         = flagSet.String("target", "", "target URL to crawl")
-	depth          = flagSet.Int("depth", 2, "depth of pages to crawl")
+	depth          = flagSet.Int("depth", 4, "depth of pages to crawl")
 	verboseLogging = flagSet.Bool("v", false, "enable verbose logging")
 )
 
