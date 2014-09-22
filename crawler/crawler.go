@@ -73,6 +73,20 @@ func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
 			log.Debugf("Page errored for %s: %v", r.Url, r.Error)
 		case r := <-c.completed:
 			log.Debugf("Page complete for %s", r.Url)
+
+			if r.Page == nil {
+				break
+			}
+
+			for _, l := range r.Page.Links {
+				go c.crawl(l.Target, r.Depth-1, fetcher)
+				c.requestsInFlight++
+				c.totalRequests++
+			}
+			log.Debugf("Fired %v new requests, %v currently in flight", len(r.Page.Links), c.requestsInFlight)
+
+			c.Pages[r.Url.String()] = r.Page
+
 		}
 
 		// Decrement outstanding requests & and abort if complete
