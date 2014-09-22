@@ -65,6 +65,7 @@ func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
 	// Get our first page & track this
 	go c.crawl(c.target, depth, fetcher)
 	c.requestsInFlight++
+	c.totalRequests++
 
 	// Event loop
 	for {
