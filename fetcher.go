@@ -23,7 +23,7 @@ type Fetcher interface {
 
 type HttpFetcher struct{}
 
-// fetch retrieves the page at the specified URL and extracts URLs
+// Fetch retrieves the page at the specified URL and extracts URLs
 func (h *HttpFetcher) Fetch(url string) (string, []string, error) {
 
 	doc, err := goquery.NewDocument(url)
