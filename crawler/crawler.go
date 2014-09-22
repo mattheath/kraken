@@ -1,9 +1,12 @@
 package crawler
 
 import (
+	"net/url"
+
 	log "github.com/cihub/seelog"
 )
 
+// Crawler coordinated crawling a site, and stores completed results
 type Crawler struct {
 	// Store our results
 	Pages map[string]*Page
@@ -13,8 +16,11 @@ type Crawler struct {
 	// for processing by the main crawler goroutine
 	completed chan *Result
 
+	// skipped tracks pages we have skipped
 	skipped chan *Result
 
+	// errored tracks pages which errored, which we may then
+	// choose to reattempt
 	errored chan *Result
 
 	// requestsInFlight tracks how many of requests are outstanding
@@ -22,22 +28,36 @@ type Crawler struct {
 }
 
 type Result struct {
-	Url   string
+	Url   *url.URL
 	Depth int
 	Page  *Page
 	Error error
 }
 
-func (c *Crawler) Work(url string, depth int, fetcher Fetcher) {
+// Work is our main event loop, coordinating request processing
+// This is single threaded and is the only thread that writes into
+// our internal maps, so we don't require coordination or locking
+// (maps are not threadsafe)
+func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
 
-	// Initialise a channel to track completed pages
+	// Convert our target to a URL
+	uri, err := url.Parse(target)
+	if err != nil {
+		log.Errorf("Could not parse target '%s'", target)
+		return
+	}
+
+	// Initialise channels to track requests
 	c.completed = make(chan *Result)
-
-	// Track skipped pages (eg. off site, beyond depth)
 	c.skipped = make(chan *Result)
+	c.errored = make(chan *Result)
+
+	// Initialise results containers
+	c.Pages = make(map[string]*Page)
+	c.Links = make(map[string]*Link)
 
 	// Get our first page & track this
-	go c.crawl(url, depth, fetcher)
+	go c.crawl(uri, depth, fetcher)
 	c.requestsInFlight++
 
 	// Event loop
