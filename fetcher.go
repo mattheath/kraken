@@ -76,7 +76,7 @@ func (h *HttpFetcher) extractLinks(doc *goquery.Document) ([]*url.URL, error) {
 		}
 	}
 
-	return urls, nil
+	return h.dedupeUrls(urls), nil
 }
 
 // extractAssets from a document
@@ -155,7 +155,7 @@ func (h *HttpFetcher) extractAssets(doc *goquery.Document) ([]*url.URL, error) {
 		}
 	}
 
-	return assets, nil
+	return h.dedupeUrls(assets), nil
 }
 
 // validateLink is an anchor with a href, and extract normalised url
@@ -197,4 +197,20 @@ func (h *HttpFetcher) normaliseUrl(parent *url.URL, urlString string) *url.URL {
 	abs := parent.ResolveReference(uri)
 
 	return abs
+}
+
+func (h *HttpFetcher) dedupeUrls(original []*url.URL) []*url.URL {
+	seen := make(map[string]bool)
+	ret := make([]*url.URL, 0)
+
+	for _, u := range original {
+		if _, ok := seen[u.String()]; ok {
+			continue
+		}
+
+		seen[u.String()] = true
+		ret = append(ret, u)
+	}
+
+	return ret
 }
