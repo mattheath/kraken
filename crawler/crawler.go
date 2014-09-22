@@ -4,13 +4,15 @@ import (
 	"net/url"
 
 	log "github.com/cihub/seelog"
+
+	"github.com/mattheath/kraken/domain"
 )
 
 // Crawler coordinated crawling a site, and stores completed results
 type Crawler struct {
 	// Store our results
-	Pages map[string]*Page
-	Links map[string]*Link
+	Pages map[string]*domain.Page
+	Links map[string]*domain.Link
 
 	// completed channel is an inbound queue of completed requests
 	// for processing by the main crawler goroutine
@@ -37,7 +39,7 @@ type Crawler struct {
 type Result struct {
 	Url   *url.URL
 	Depth int
-	Page  *Page
+	Page  *domain.Page
 	Error error
 }
 
@@ -56,8 +58,8 @@ func (c *Crawler) Work(target *url.URL, depth int, fetcher Fetcher) {
 	c.errored = make(chan *Result)
 
 	// Initialise results containers
-	c.Pages = make(map[string]*Page)
-	c.Links = make(map[string]*Link)
+	c.Pages = make(map[string]*domain.Page)
+	c.Links = make(map[string]*domain.Link)
 
 	// Get our first page & track this
 	go c.crawl(c.target, depth, fetcher)
@@ -140,16 +142,16 @@ func (c *Crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
 
 	log.Infof("%v URLs found at %s", len(urls), source.String())
 
-	links := make([]*Link, 0)
+	links := make([]*domain.Link, 0)
 	for _, u := range urls {
-		links = append(links, &Link{
+		links = append(links, &domain.Link{
 			Source: source,
 			Target: u,
 		})
 	}
 
 	// Store this page and links into the result
-	res.Page = &Page{
+	res.Page = &domain.Page{
 		Url:    source,
 		Links:  links,
 		Assets: assets,

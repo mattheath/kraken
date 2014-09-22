@@ -9,14 +9,3 @@ type Fetcher interface {
 	// a slice of URLs found on that page.
 	Fetch(url string) (urls []*url.URL, assets []*url.URL, err error)
 }
-
-type Page struct {
-	Url    *url.URL
-	Links  []*Link
-	Assets []*url.URL
-}
-
-type Link struct {
-	Source *url.URL
-	Target *url.URL
-}
