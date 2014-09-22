@@ -3,12 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 
 	log "github.com/cihub/seelog"
 
 	"github.com/mattheath/kraken/crawler"
+	"github.com/mattheath/kraken/sitemap"
 )
 
 var (
@@ -17,7 +19,7 @@ var (
 	target         = flagSet.String("target", "", "target URL to crawl")
 	depth          = flagSet.Int("depth", 4, "depth of pages to crawl")
 	verboseLogging = flagSet.Bool("v", false, "enable verbose logging")
-	outputFile     = flagSet.String("o", "", "output sitemap to file")
+	outputDir      = flagSet.String("o", "", "directory to output to")
 )
 
 func main() {
@@ -39,14 +41,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Save output file
-	out := *outputFile
+	// Directory to save output files
+	out := *outputDir
 	if out == "" {
-		pwd, err := os.Getwd()
+		out, err = os.Getwd()
 		if err != nil {
 			log.Criticalf("Failed to get current working directory: %v", err)
 		}
-		out = fmt.Sprintf("%s/%s-sitemap.xml", pwd, targetUrl.Host)
 	}
 
 	// Use a HTTP based fetcher
@@ -59,11 +60,10 @@ func main() {
 	c := &crawler.Crawler{}
 	c.Work(targetUrl, *depth, fetcher)
 
-	log.Debugf("We're done!")
+	// Success
 	log.Infof("%v pages found, %v requests attempted", len(c.Pages), c.TotalRequests())
 
-	log.Infof("Outputting site map to %s", out)
-	// output map...
+	writeSitemaps(out, c)
 }
 
 // setLogger initialises the logger with the desired verbosity level
@@ -86,4 +86,34 @@ func setLogger(verbose bool) {
 
 	logger, _ := log.LoggerFromConfigAsBytes([]byte(fmt.Sprintf(logConfig, logLevel)))
 	log.UseLogger(logger)
+}
+
+func writeSitemaps(outdir string, c *crawler.Crawler) error {
+
+	// Build sitemap and write to output file
+	xmlout := fmt.Sprintf("%s/%s-sitemap.xml", outdir, c.Target().Host)
+	xmlSitemap, err := sitemap.BuildXMLSitemap(c.AllPages())
+	if err != nil {
+		log.Criticalf("Failed to generate sitemap to %s", xmlout)
+		os.Exit(1)
+	}
+
+	if err := ioutil.WriteFile(xmlout, xmlSitemap, 0644); err != nil {
+		log.Criticalf("Failed to write sitemap to %s", xmlout)
+		os.Exit(1)
+	}
+	log.Infof("Wrote XML sitemap to %s", xmlout)
+
+	// Build JSON site description
+	siteout := fmt.Sprintf("%s/%s-sitemap.json", outdir, c.Target().Host)
+
+	b, err := sitemap.BuildJSONSiteStructure(c.Target(), c.AllPages())
+
+	if err := ioutil.WriteFile(siteout, b, 0644); err != nil {
+		log.Criticalf("Failed to write sitemap to %s", siteout)
+		os.Exit(1)
+	}
+	log.Infof("Wrote JSON sitemap to %s", siteout)
+
+	return nil
 }
