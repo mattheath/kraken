@@ -33,6 +33,7 @@ type Crawler struct {
 	target *url.URL
 }
 
+// Result represents the result of a crawl request
 type Result struct {
 	Url   *url.URL
 	Depth int
