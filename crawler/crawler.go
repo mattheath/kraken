@@ -45,14 +45,10 @@ type Result struct {
 // This is single threaded and is the only thread that writes into
 // our internal maps, so we don't require coordination or locking
 // (maps are not threadsafe)
-func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
-	var err error
+func (c *Crawler) Work(target *url.URL, depth int, fetcher Fetcher) {
 
-	// Convert our target to a URL
-	if c.target, err = url.Parse(target); err != nil {
-		log.Errorf("Could not parse target '%s'", target)
-		return
-	}
+	// Store our target to a URL
+	c.target = target
 
 	// Initialise channels to track requests
 	c.completed = make(chan *Result)
