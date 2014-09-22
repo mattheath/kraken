@@ -4,10 +4,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	html "code.google.com/p/go.net/html"
 	atom "code.google.com/p/go.net/html/atom"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExtractValidHrefSuccess(t *testing.T) {
