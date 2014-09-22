@@ -89,6 +89,12 @@ func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
 					continue
 				}
 
+				// Check if we've already hit this page
+				if _, exists := c.Pages[l.Target.String()]; exists {
+					// log.Debugf("Skipping %s as already processed", l.Target.String())
+					continue
+				}
+
 				log.Debugf("Triggering crawl of %s from %s", l.Target.String(), r.Url.String())
 				go c.crawl(l.Target, r.Depth-1, fetcher)
 				c.requestsInFlight++
