@@ -72,16 +72,13 @@ var fetcher = fakeFetcher{
 
 func TestCrawlSuccess(t *testing.T) {
 
-	c := NewCrawler()
+	c := newMockCrawler()
 
 	// Test completable requests
 	testCases := map[string]*fakeResult{
 		"http://golang.org/":     fetcher["http://golang.org/"],
 		"http://golang.org/pkg/": fetcher["http://golang.org/pkg/"],
 	}
-
-	// Buffer channel so we can retrieve our results in a single thread
-	c.completed = make(chan *Result, 1)
 
 	// Fire!
 	for target, res := range testCases {
@@ -114,16 +111,13 @@ func TestCrawlSuccess(t *testing.T) {
 
 func TestCrawlError(t *testing.T) {
 
-	c := NewCrawler()
+	c := newMockCrawler()
 
 	// Test error cases, these don't exist in the mocked fetcher
 	testCases := []string{
 		"http://www.omfgdogs.com/",
 		"http://ducksarethebest.com/",
 	}
-
-	// Buffer channel so we can retrieve our results in a single thread
-	c.errored = make(chan *Result, 1)
 
 	// Fire!
 	for _, target := range testCases {
@@ -141,6 +135,46 @@ func TestCrawlError(t *testing.T) {
 		assert.NotNil(t, r.Error)
 	}
 
+}
+
+func TestCrawlSkipAtMaxDepth(t *testing.T) {
+
+	c := newMockCrawler()
+
+	// Test error cases, these don't exist in the mocked fetcher
+	testCases := []string{
+		"http://golang.org/pkg/",
+	}
+
+	// Fire!
+	for _, target := range testCases {
+		c.crawl(strToUrl(target), 0, fetcher)
+
+		var r *Result
+		select {
+		case <-c.completed:
+			t.Error("Request completed, should have been skipped")
+		case <-c.errored:
+			t.Error("Request errored, should have been skipped")
+		case r = <-c.skipped:
+		}
+
+		assert.NotNil(t, r)
+	}
+
+}
+
+// newMockCrawler returns a crawler with buffered channels
+// suitable for single threaded use
+func newMockCrawler() *crawler {
+	c := NewCrawler()
+
+	// Mock channels as buffered so we can retrieve our results in a single thread
+	c.skipped = make(chan *Result, 1)
+	c.completed = make(chan *Result, 1)
+	c.errored = make(chan *Result, 1)
+
+	return c
 }
 
 func linksToStrings(links []*domain.Link) []string {
