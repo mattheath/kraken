@@ -81,47 +81,51 @@ func (c *Crawler) Work(target string, depth int, fetcher Fetcher) {
 			log.Debugf("Complete")
 			return
 		}
-
 	}
-
 }
 
-// Crawl uses fetcher to recursively crawl
+// crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func (c *Crawler) crawl(url string, depth int, fetcher Fetcher) {
+func (c *Crawler) crawl(source *url.URL, depth int, fetcher Fetcher) {
 
+	// The result of our crawl
 	res := &Result{
 		Depth: depth,
-		Url:   url,
+		Url:   source,
 	}
 
+	// Skip pages if we are at our maximum depth
 	if depth <= 0 {
-		log.Debugf("Skipping %s as at 0 depth", url)
+		log.Debugf("Skipping %s as at 0 depth", source.String())
 		c.skipped <- res
 		return
 	}
 
-	_, urls, err := fetcher.Fetch(url)
+	// Crawl the page, using our fetcher
+	_, urls, err := fetcher.Fetch(source.String())
 	if err != nil {
 		res.Error = err
 		c.errored <- res
 		return
 	}
 
-	log.Infof("%v URLs found at %s", len(urls), url)
+	log.Infof("%v URLs found at %s", len(urls), source.String())
 
-	// 	for _, u := range urls {
-	// 		log.Debugf("Firing crawler at %s, depth %v", u, depth-1)
-	// 		count++
-	// 		go Crawl(u, depth-1, fetcher, done)
-	// 	}
+	links := make([]*Link, 0)
+	for _, u := range urls {
+		if nu, err := url.Parse(u); err == nil {
+			links = append(links, &Link{
+				Source: source,
+				Target: nu,
+			})
+		}
+	}
 
-	// 	for ; count > 0; count-- {
-	// 		log.Debugf("waiting on done chan")
-	// 		<-done
-	// 	}
-
-	// 	log.Debugf("Page complete: %s", url)
+	// Store this page and links into the result
+	res.Page = &Page{
+		Url:   source,
+		Links: links,
+	}
 
 	// 	// Mark this page as complete
 	c.completed <- res
