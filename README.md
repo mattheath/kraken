@@ -31,4 +31,5 @@ The crawlers retrieve links and a list of static assets used on each page. This 
  - [ ] Limit the number of concurrent goroutines, currently this runs as fast as possible
  - [ ] Retry failed page loads with exponential backoff
  - [ ] Allow customisation of resources extracted from pages
+ - [ ] Image assets referenced in CSS are not currently extracted
  - [ ] Listen on HTTP port and serve back site description
